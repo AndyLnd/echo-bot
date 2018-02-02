@@ -78,7 +78,7 @@ public class MessageHandler extends MessageHandlerBase {
                 case "start game":
                     if(!this.isGameRunning){
                         this.startGame();
-                        client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!")
+                        client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!");
                     } else {
                         client.sendText("Let's finish this one first, okay?");
                     }
