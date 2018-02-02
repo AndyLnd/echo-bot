@@ -16,7 +16,7 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-package com.wire.bots.echo;
+package com.wire.bots.scrabbler;
 
 import com.wire.bots.sdk.Logger;
 import com.wire.bots.sdk.MessageHandlerBase;
@@ -33,6 +33,9 @@ import java.util.Collection;
 
 public class MessageHandler extends MessageHandlerBase {
     private final String dataDir;
+    private boolean isGameRunning;
+    private int secretNumber;
+    private int guessCount;
 
     MessageHandler(String dataDir) {
         this.dataDir = dataDir;
@@ -69,123 +72,46 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onText(WireClient client, TextMessage msg) {
         try {
-            Logger.info("Received Text. bot: %s, from: %s", client.getId(), msg.getUserId());
-
-            // send echo back to user
-            client.sendText("You wrote: " + msg.getText());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onImage(WireClient client, ImageMessage msg) {
-        try {
-            Logger.info("Received Image: type: %s, size: %,d KB, h: %d, w: %d, tag: %s",
-                    msg.getMimeType(),
-                    msg.getSize() / 1024,
-                    msg.getHeight(),
-                    msg.getWidth(),
-                    msg.getTag()
-            );
-
-            // download this image from Wire server
-            byte[] img = client.downloadAsset(msg.getAssetKey(),
-                    msg.getAssetToken(),
-                    msg.getSha256(),
-                    msg.getOtrKey());
-
-            // echo this image back to user
-            client.sendPicture(img, msg.getMimeType());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onAudio(WireClient client, AudioMessage msg) {
-        try {
-            Logger.info("Received Audio: name: %s, type: %s, size: %,d KB, duration: %,d sec",
-                    msg.getName(),
-                    msg.getMimeType(),
-                    msg.getSize() / 1024,
-                    msg.getDuration() / 1000
-            );
-
-            // download this audio from Wire Server
-            byte[] audio = client.downloadAsset(msg.getAssetKey(),
-                    msg.getAssetToken(),
-                    msg.getSha256(),
-                    msg.getOtrKey());
-
-            // echo this audio back to user
-            client.sendAudio(audio,
-                    msg.getName(),
-                    msg.getMimeType(),
-                    msg.getDuration());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onVideo(WireClient client, VideoMessage msg) {
-        try {
-            Logger.info("Received Video: name: %s, type: %s, size: %,d KB, duration: %,d sec",
-                    msg.getName(),
-                    msg.getMimeType(),
-                    msg.getSize() / 1024,
-                    msg.getDuration() / 1000
-            );
-
-            // download this video from Wire Server
-            byte[] video = client.downloadAsset(msg.getAssetKey(),
-                    msg.getAssetToken(),
-                    msg.getSha256(),
-                    msg.getOtrKey());
-
-            // echo this video back to user
-            client.sendVideo(video,
-                    msg.getName(),
-                    msg.getMimeType(),
-                    msg.getDuration(),
-                    msg.getHeight(),
-                    msg.getWidth());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onAttachment(WireClient client, AttachmentMessage msg) {
-        try {
-            Logger.info("Received Attachment: name: %s, type: %s, size: %,d KB",
-                    msg.getName(),
-                    msg.getMimeType(),
-                    msg.getSize() / 1024
-            );
-
-            // download file from Wire servers
-            byte[] bytes = client.downloadAsset(msg.getAssetKey(),
-                    msg.getAssetToken(),
-                    msg.getSha256(),
-                    msg.getOtrKey());
-
-            // save it locally
-            File file = new File(dataDir, msg.getName());
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                fos.write(bytes);
+            String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
+            switch(text) {
+                case "lets play":
+                case "start game":
+                    if(!this.isGameRunning){
+                        this.startGame();
+                        client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!")
+                    } else {
+                        client.sendText("Let's finish this one first, okay?");
+                    }
+                    break;
+                default:
+                    try {
+                        int guess = Integer.parseInt(msg.getText(), 10);
+                        this.guessCount++;
+                        if (guess > this.secretNumber) {
+                            client.sendText("Too high!");
+                        } else if (guess < this.secretNumber) {
+                            client.sendText("Too low!");
+                        } else {
+                            client.sendText("Correct! It took you only " + this.guessCount + " guesses.");
+                            this.endGame();
+                        }
+                    } catch (NumberFormatException e) {
+                        client.sendText("Please enter a number.");
+                    }
             }
-
-            // echo this file back to user
-            client.sendFile(file, msg.getMimeType());
-
-            // we don't need this file anymore.
-            if (!file.delete())
-                Logger.warning("Failed to delete file: %s", file.getPath());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void startGame() {
+        this.isGameRunning = true;
+        this.guessCount = 0;
+        this.secretNumber = (int) Math.ceil(Math.random() * 100);
+    }
+
+    private void endGame() {
+        this.isGameRunning = false;
     }
 
     @Override
@@ -195,7 +121,7 @@ public class MessageHandler extends MessageHandlerBase {
                     client.getId(),
                     client.getConversationId());
 
-            String label = "Hello! I am Echo. I echo everything you write";
+            String label = "Hi! Want to play a Game? Just say \"Let's play!\"";
             client.sendText(label);
         } catch (Exception e) {
             e.printStackTrace();

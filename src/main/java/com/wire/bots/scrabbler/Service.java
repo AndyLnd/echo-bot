@@ -16,12 +16,19 @@
 // along with this program. If not, see http://www.gnu.org/licenses/.
 //
 
-package com.wire.bots.echo;
+package com.wire.bots.scrabbler;
 
-public class Config extends com.wire.bots.sdk.Configuration {
-    private String someValue;
+import com.wire.bots.sdk.MessageHandlerBase;
+import com.wire.bots.sdk.Server;
+import io.dropwizard.setup.Environment;
 
-    public String getSomeValue() {
-        return someValue;
+public class Service extends Server<Config> {
+    public static void main(String[] args) throws Exception {
+        new Service().run(args);
+    }
+
+    @Override
+    protected MessageHandlerBase createHandler(Config config, Environment env) {
+        return new MessageHandler(config.getCryptoDir());
     }
 }
