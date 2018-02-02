@@ -29,6 +29,7 @@ import com.wire.bots.sdk.server.model.User;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class MessageHandler extends MessageHandlerBase {
@@ -54,14 +55,11 @@ public class MessageHandler extends MessageHandlerBase {
      */
     @Override
     public boolean onNewBot(NewBot newBot) {
-        Logger.info(String.format("onNewBot: bot: %s, username: %s",
-                newBot.id,
-                newBot.origin.handle));
+        Logger.info(String.format("onNewBot: bot: %s, username: %s", newBot.id, newBot.origin.handle));
 
         for (Member member : newBot.conversation.members) {
             if (member.service != null) {
-                Logger.warning("Rejecting NewBot. Provider: %s service: %s",
-                        member.service.provider,
+                Logger.warning("Rejecting NewBot. Provider: %s service: %s", member.service.provider,
                         member.service.id);
                 return false; // we don't want to be in a conv if other bots are there.
             }
@@ -73,17 +71,18 @@ public class MessageHandler extends MessageHandlerBase {
     public void onText(WireClient client, TextMessage msg) {
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
-            switch(text) {
-                case "lets play":
-                case "start game":
-                    if(!this.isGameRunning){
-                        this.startGame();
-                        client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!");
-                    } else {
-                        client.sendText("Let's finish this one first, okay?");
-                    }
-                    break;
-                default:
+            switch (text) {
+            case "lets play":
+            case "start game":
+                if (!this.isGameRunning) {
+                    this.startGame();
+                    client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!");
+                } else {
+                    client.sendText("Let's finish this one first, okay?");
+                }
+                break;
+            default:
+                if (this.isGameRunning) {
                     try {
                         int guess = Integer.parseInt(msg.getText(), 10);
                         this.guessCount++;
@@ -92,12 +91,15 @@ public class MessageHandler extends MessageHandlerBase {
                         } else if (guess < this.secretNumber) {
                             client.sendText("Too low!");
                         } else {
-                            client.sendText("Correct! It took you only " + this.guessCount + " guesses.");
+                            User user = client.getUsers(Arrays.asList(msg.getUserId())).stream().findFirst().get();
+                            client.sendText("Well done, " + user.name + "! It took you only " + this.guessCount + " guesses.");
+                            client.sendText("Want to go another round? Just say \"Let's play!\" again.");
                             this.endGame();
                         }
                     } catch (NumberFormatException e) {
                         client.sendText("Please enter a number.");
                     }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,9 +119,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client) {
         try {
-            Logger.info("onNewConversation: bot: %s, conv: %s",
-                    client.getId(),
-                    client.getConversationId());
+            Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
 
             String label = "Hi! Want to play a Game? Just say \"Let's play!\"";
             client.sendText(label);
@@ -134,12 +134,7 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             Collection<User> users = client.getUsers(userIds);
             for (User user : users) {
-                Logger.info("onMemberJoin: bot: %s, user: %s/%s @%s",
-                        client.getId(),
-                        user.id,
-                        user.name,
-                        user.handle
-                );
+                Logger.info("onMemberJoin: bot: %s, user: %s/%s @%s", client.getId(), user.id, user.name, user.handle);
 
                 // say Hi to new participant
                 client.sendText("Hi there " + user.name);
@@ -152,9 +147,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
-        Logger.info("onMemberLeave: users: %s, bot: %s",
-                userIds,
-                client.getId());
+        Logger.info("onMemberLeave: users: %s, bot: %s", userIds, client.getId());
     }
 
     @Override
