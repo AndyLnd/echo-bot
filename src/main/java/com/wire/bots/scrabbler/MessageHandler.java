@@ -155,7 +155,8 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client) {
         Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
-        this.sendText(client, "Hi! Want to play a Game? Just say \"Let's play!\"");
+        this.sendText(client, "Hi!");
+        this.sendInstructions(client);
     }
 
     @Override
@@ -167,11 +168,16 @@ public class MessageHandler extends MessageHandlerBase {
 
                 // say Hi to new participant
                 client.sendText("Hi there " + user.name);
+                this.sendInstructions(client);
             }
         } catch (Exception e) {
             e.printStackTrace();
             Logger.error(e.getMessage());
         }
+    }
+
+    private void sendInstructions(WireClient client){
+        this.sendText(client, "I am the scrabble bot.\nIf you want to play, just say \"Let's play!\".\nI will give you 9 letters and you give me as many words as you can build from them in 30 seconds.");
     }
 
     private void sendText(WireClient client, String text) {
