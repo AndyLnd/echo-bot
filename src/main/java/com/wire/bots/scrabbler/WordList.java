@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class WordList {
-  private Set<String> wordList = new HashSet<String>();
+  public Set<String> wordList = new HashSet<String>();
 
   WordList(String pathToList) {
     BufferedReader br = null;
