@@ -47,7 +47,7 @@ public class MessageHandler extends MessageHandlerBase {
     private Map<String, Integer> scores = new HashMap<String, Integer>();
     private Set<String> guessedWords = new HashSet<String>();
     private Timer timer = new Timer("GameTimer");
-    private WordList wordList = new WordList("./sowpods.txt");
+    private WordList wordList = new WordList("sowpods.txt");
     private Set<Character> chars = new HashSet<Character>();
     private String wordRegex;
     private int charCount = 8;
