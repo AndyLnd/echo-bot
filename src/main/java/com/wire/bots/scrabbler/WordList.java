@@ -15,6 +15,7 @@ public class WordList {
     BufferedReader br = null;
     try {
       String filePath = WordList.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+      filePath = filePath.substring(0, filePath.lastIndexOf("/"));
       br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
       Logger.info(filePath + "/" + pathToList);
       String line = br.readLine();
