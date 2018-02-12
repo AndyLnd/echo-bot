@@ -26,21 +26,31 @@ import com.wire.bots.sdk.server.model.Member;
 import com.wire.bots.sdk.server.model.NewBot;
 import com.wire.bots.sdk.server.model.User;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Random;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 public class MessageHandler extends MessageHandlerBase {
-    private final String dataDir;
     private boolean isGameRunning;
-    private int secretNumber;
-    private int guessCount;
-
-    MessageHandler(String dataDir) {
-        this.dataDir = dataDir;
-    }
+    private Map<String, Integer> scores = new HashMap<String, Integer>();
+    private Set<String> guessedWords = new HashSet<String>();
+    private Timer timer = new Timer("GameTimer");
+    private WordList wordList = new WordList("./sowpods.txt");
+    private Set<Character> chars = new HashSet<Character>();
+    private String wordRegex;
+    private int charCount = 8;
 
     /**
      * @param newBot Initialization object for new Bot instance
@@ -71,62 +81,75 @@ public class MessageHandler extends MessageHandlerBase {
     public void onText(WireClient client, TextMessage msg) {
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
-            switch (text) {
-            case "lets play":
-            case "start game":
-                if (!this.isGameRunning) {
-                    this.startGame();
-                    client.sendText("Alright! I chose a number from 1 to 100. Try to guess it!");
-                } else {
-                    client.sendText("Let's finish this one first, okay?");
-                }
-                break;
-            default:
-                if (this.isGameRunning) {
-                    try {
-                        int guess = Integer.parseInt(msg.getText(), 10);
-                        this.guessCount++;
-                        if (guess > this.secretNumber) {
-                            client.sendText("Too high!");
-                        } else if (guess < this.secretNumber) {
-                            client.sendText("Too low!");
-                        } else {
-                            User user = client.getUsers(Arrays.asList(msg.getUserId())).stream().findFirst().get();
-                            client.sendText("Well done, " + user.name + "! It took you only " + this.guessCount + " guesses.");
-                            client.sendText("Want to go another round? Just say \"Let's play!\" again.");
-                            this.endGame();
-                        }
-                    } catch (NumberFormatException e) {
-                        client.sendText("Please enter a number.");
-                    }
-                }
+            if (this.isGameRunning) {
+                this.handleInput(msg);
+            } else if (text.equals("lets play") || text.equals("start game")) {
+                this.startGame(client);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void startGame() {
+    private void startGame(WireClient client) {
         this.isGameRunning = true;
-        this.guessCount = 0;
-        this.secretNumber = (int) Math.ceil(Math.random() * 100);
+        this.scores.clear();
+        this.guessedWords.clear();
+        this.chars.clear();
+        String abc = "abcdefghijklmnopqrstuvwxyz";
+        Random r = new Random();
+        while (this.chars.size() < this.charCount) {
+            this.chars.add(abc.charAt(r.nextInt(abc.length())));
+        }
+        this.wordRegex = "(?i)^[" + String.valueOf(this.chars) + "]+$";
+        this.sendText(client, "Your letters:");
+        this.sendText(client, StringUtils.join(this.chars, " ").toUpperCase());
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                endGame(client);
+            }
+        }, TimeUnit.SECONDS.toMillis(30));
     }
 
-    private void endGame() {
+    private void handleInput(TextMessage msg) {
+        String word = msg.getText().trim().toLowerCase();
+        String user = msg.getUserId();
+        if (this.isValidWord(word)) {
+            Integer oldScore = this.scores.get(user);
+            if (oldScore == null) {
+                oldScore = 0;
+            }
+            this.scores.put(user, oldScore + 1);
+            this.guessedWords.add(word);
+        }
+    }
+
+    private void endGame(WireClient client) {
         this.isGameRunning = false;
-    }
-
-    @Override
-    public void onNewConversation(WireClient client) {
+        this.sendText(client, "Time's up!");
+        this.sendText(client, "Here are the scores:");
         try {
-            Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
-
-            String label = "Hi! Want to play a Game? Just say \"Let's play!\"";
-            client.sendText(label);
+            Collection<User> users = client.getUsers(new ArrayList<String>(scores.keySet()));
+            List<User> userList = new ArrayList<User>(users);
+            Collections.sort(userList, new Sorter());
+            for (User user : userList) {
+                this.sendText(client, user.name + ": " + this.scores.get(user.id));
+            }
         } catch (Exception e) {
             e.printStackTrace();
             Logger.error(e.getMessage());
         }
+    }
+
+    private boolean isValidWord(String word) {
+        return !this.guessedWords.contains(word) && word.matches(this.wordRegex) && this.wordList.hasWord(word);
+    }
+
+    @Override
+    public void onNewConversation(WireClient client) {
+        Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
+        this.sendText(client, "Hi! Want to play a Game? Just say \"Let's play!\"");
     }
 
     @Override
@@ -145,6 +168,15 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
+    private void sendText(WireClient client, String text) {
+        try {
+            client.sendText(text);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.error(e.getMessage());
+        }
+    }
+
     @Override
     public void onMemberLeave(WireClient client, ArrayList<String> userIds) {
         Logger.info("onMemberLeave: users: %s, bot: %s", userIds, client.getId());
@@ -153,5 +185,11 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onBotRemoved(String botId) {
         Logger.info("Bot: %s got removed from the conversation :(", botId);
+    }
+
+    public class Sorter implements Comparator<User> {
+        public int compare(User user1, User user2) {
+            return scores.get(user1.id) - scores.get(user2.id);
+        }
     }
 }
