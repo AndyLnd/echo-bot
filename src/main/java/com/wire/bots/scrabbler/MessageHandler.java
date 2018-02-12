@@ -109,13 +109,15 @@ public class MessageHandler extends MessageHandlerBase {
             public void run() {
                 endGame(client);
             }
-        }, TimeUnit.SECONDS.toMillis(30));
+        }, TimeUnit.SECONDS.toMillis(10));
     }
 
     private void handleInput(TextMessage msg) {
         String word = msg.getText().trim().toLowerCase();
         String user = msg.getUserId();
+        Logger.info("handleInput - word: %s user: %s", word, user);
         if (this.isValidWord(word)) {
+            Logger.info("isValid");
             Integer oldScore = this.scores.get(user);
             if (oldScore == null) {
                 oldScore = 0;
