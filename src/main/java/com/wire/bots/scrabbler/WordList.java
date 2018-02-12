@@ -1,6 +1,7 @@
 package com.wire.bots.scrabbler;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,7 +12,8 @@ public class WordList {
   WordList(String pathToList) {
     BufferedReader br = null;
     try {
-      br = new BufferedReader(new FileReader(pathToList));
+      String filePath = new File("").getAbsolutePath();
+      br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
       String line = null;
       while ((line = br.readLine()) != null) {
         this.wordList.add(line.trim());
