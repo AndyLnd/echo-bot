@@ -103,7 +103,7 @@ public class MessageHandler extends MessageHandlerBase {
             this.chars.add(abc.charAt(r.nextInt(abc.length())));
         }
         this.wordRegex = "(?i)^[" + String.valueOf(this.chars) + "]+$";
-        this.sendText(client, "Your letters:");
+        // this.sendText(client, "Your letters:");
         this.sendText(client, StringUtils.join(this.chars, " ").toUpperCase());
         timer.schedule(new TimerTask() {
             @Override
