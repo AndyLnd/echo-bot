@@ -79,7 +79,6 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
-        Logger.info("wordList.size(): %i", this.wordList.wordList.size());
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
             if (this.isGameRunning) {
@@ -152,6 +151,7 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client) {
         Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
+        Logger.info("wordList.size():" + this.wordList.wordList.size());
         this.sendText(client, "Hi! Want to play a Game? Just say \"Let's play!\"");
     }
 
