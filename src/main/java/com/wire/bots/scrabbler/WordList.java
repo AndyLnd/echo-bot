@@ -1,5 +1,6 @@
 package com.wire.bots.scrabbler;
 
+import com.wire.bots.sdk.Logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -14,9 +15,11 @@ public class WordList {
     try {
       String filePath = new File("").getAbsolutePath();
       br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
-      String line = null;
-      while ((line = br.readLine()) != null) {
+      Logger.info(filePath + "/" + pathToList);
+      String line = br.readLine();
+      while (line != null) {
         this.wordList.add(line.trim());
+        line = br.readLine();
       }
     } catch (Exception e) {
     } finally {
