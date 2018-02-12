@@ -14,10 +14,9 @@ public class WordList {
   WordList(String pathToList) {
     BufferedReader br = null;
     try {
-      String path = WordList.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-      String decodedPath = URLDecoder.decode(path, "UTF-8");
-      br = new BufferedReader(new FileReader(decodedPath + "/" + pathToList));
-      Logger.info(decodedPath + "/" + pathToList);
+      String filePath = WordList.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+      br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
+      Logger.info(filePath + "/" + pathToList);
       String line = br.readLine();
       while (line != null) {
         this.wordList.add(line.trim());
