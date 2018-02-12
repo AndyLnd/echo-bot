@@ -50,7 +50,8 @@ public class MessageHandler extends MessageHandlerBase {
     private WordList wordList = new WordList("sowpods.txt");
     private Set<Character> chars = new HashSet<Character>();
     private String wordRegex;
-    private int charCount = 8;
+    private int consonantCount = 6;
+    private int vowelCount = 3;
 
     /**
      * @param newBot Initialization object for new Bot instance
@@ -79,7 +80,6 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
-        Logger.info("wordList.size():" + this.wordList.wordList.size());
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
             if (this.isGameRunning) {
@@ -97,28 +97,31 @@ public class MessageHandler extends MessageHandlerBase {
         this.scores.clear();
         this.guessedWords.clear();
         this.chars.clear();
-        String abc = "abcdefghijklmnopqrstuvwxyz";
+        String consonants = "bcdfghjklmnpqrstvwxyz";
+        String vowels = "aeiou";
         Random r = new Random();
-        while (this.chars.size() < this.charCount) {
-            this.chars.add(abc.charAt(r.nextInt(abc.length())));
+        while (this.chars.size() < this.consonantCount) {
+            this.chars.add(consonants.charAt(r.nextInt(consonants.length())));
         }
+        while (this.chars.size() < this.consonantCount + this.vowelCount) {
+            this.chars.add(vowels.charAt(r.nextInt(vowels.length())));
+        }
+
         this.wordRegex = "(?i)^[" + String.valueOf(this.chars) + "]+$";
-        // this.sendText(client, "Your letters:");
+        this.sendText(client, "Your letters:");
         this.sendText(client, StringUtils.join(this.chars, " ").toUpperCase());
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 endGame(client);
             }
-        }, TimeUnit.SECONDS.toMillis(10));
+        }, TimeUnit.SECONDS.toMillis(30));
     }
 
     private void handleInput(TextMessage msg) {
         String word = msg.getText().trim().toLowerCase();
         String user = msg.getUserId();
-        Logger.info("handleInput - word: %s user: %s", word, user);
         if (this.isValidWord(word)) {
-            Logger.info("isValid");
             Integer oldScore = this.scores.get(user);
             if (oldScore == null) {
                 oldScore = 0;
@@ -152,7 +155,6 @@ public class MessageHandler extends MessageHandlerBase {
     @Override
     public void onNewConversation(WireClient client) {
         Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
-        Logger.info("wordList.size():" + this.wordList.wordList.size());
         this.sendText(client, "Hi! Want to play a Game? Just say \"Let's play!\"");
     }
 

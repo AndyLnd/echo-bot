@@ -2,9 +2,7 @@ package com.wire.bots.scrabbler;
 
 import com.wire.bots.sdk.Logger;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
-import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +15,6 @@ public class WordList {
       String filePath = WordList.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
       filePath = filePath.substring(0, filePath.lastIndexOf("/"));
       br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
-      Logger.info(filePath + "/" + pathToList);
       String line = br.readLine();
       while (line != null) {
         this.wordList.add(line.trim());
