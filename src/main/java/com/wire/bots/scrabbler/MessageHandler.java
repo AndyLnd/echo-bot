@@ -79,6 +79,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     @Override
     public void onText(WireClient client, TextMessage msg) {
+        Logger.info("wordList.size():" + this.wordList.wordList.size());
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
             if (this.isGameRunning) {
