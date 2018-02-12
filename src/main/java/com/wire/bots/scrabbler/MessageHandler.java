@@ -86,6 +86,8 @@ public class MessageHandler extends MessageHandlerBase {
                 this.handleInput(msg);
             } else if (text.equals("lets play") || text.equals("start game")) {
                 this.startGame(client);
+            } else if (text.equals("help")) {
+                this.sendInstructions(client);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -176,8 +178,9 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private void sendInstructions(WireClient client){
-        this.sendText(client, "I am the scrabble bot.\nIf you want to play, just say \"Let's play!\".\nI will give you 9 letters and you give me as many words as you can build from them in 30 seconds.");
+    private void sendInstructions(WireClient client) {
+        this.sendText(client,
+                "I am the scrabble bot.\nIf you want to play, just say \"Let's play!\".\nI will give you 9 letters and you give me as many words as you can build from them in 30 seconds.");
     }
 
     private void sendText(WireClient client, String text) {

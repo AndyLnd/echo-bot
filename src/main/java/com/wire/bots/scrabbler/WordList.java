@@ -2,24 +2,23 @@ package com.wire.bots.scrabbler;
 
 import com.wire.bots.sdk.Logger;
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class WordList {
-  public Set<String> wordList = new HashSet<String>();
+  public Set<String> wordList;
 
   WordList(String pathToList) {
     BufferedReader br = null;
     try {
       String filePath = WordList.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
       filePath = filePath.substring(0, filePath.lastIndexOf("/"));
-      br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
-      String line = br.readLine();
-      while (line != null) {
-        this.wordList.add(line.trim());
-        line = br.readLine();
-      }
+      List<String> lines = Files.readAllLines(Paths.get(filePath, pathToList));
+      this.wordList = new HashSet<String>(lines);
+      Logger.info("wordlist loaded: " + this.wordList.size());
     } catch (Exception e) {
       e.printStackTrace();
       Logger.error(e.getMessage());
