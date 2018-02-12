@@ -4,6 +4,7 @@ import com.wire.bots.sdk.Logger;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.net.URLDecoder;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,9 +14,10 @@ public class WordList {
   WordList(String pathToList) {
     BufferedReader br = null;
     try {
-      String filePath = new File("").getAbsolutePath();
-      br = new BufferedReader(new FileReader(filePath + "/" + pathToList));
-      Logger.info(filePath + "/" + pathToList);
+      String path = WordList.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      String decodedPath = URLDecoder.decode(path, "UTF-8");
+      br = new BufferedReader(new FileReader(decodedPath + "/" + pathToList));
+      Logger.info(decodedPath + "/" + pathToList);
       String line = br.readLine();
       while (line != null) {
         this.wordList.add(line.trim());
