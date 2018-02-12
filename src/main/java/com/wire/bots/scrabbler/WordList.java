@@ -22,6 +22,8 @@ public class WordList {
         line = br.readLine();
       }
     } catch (Exception e) {
+      e.printStackTrace();
+      Logger.error(e.getMessage());
     } finally {
       if (br != null) {
         try {
