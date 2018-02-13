@@ -110,7 +110,6 @@ public class MessageHandler extends MessageHandlerBase {
         while (letters.size() < consonantCount + vowelCount) {
             letters.add(vowels.charAt(rand.nextInt(vowels.length())));
         }
-
         wordRegex = "(?i)^[" + String.valueOf(letters) + "]+$";
         String letterString = StringUtils.join(letters, " ").toUpperCase();
         sendText(client, "Your letters:\n" + letterString);
@@ -159,7 +158,7 @@ public class MessageHandler extends MessageHandlerBase {
             String scoreList = "";
             for (User user : userList) {
                 Integer score = scores.get(user.id);
-                scoreList += user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score)
+                scoreList += firstName(user.name) + ": " + (score == 0 ? unicode(0x1F4A9) : score)
                         + (score == highScore && highScore != 0 ? " " + unicode(0x1F389) : "") + "\n";
             }
             sendText(client, "Time's up!\nHere are the scores:\n" + scoreList);
@@ -177,6 +176,10 @@ public class MessageHandler extends MessageHandlerBase {
         return !guessedWords.contains(word) && word.matches(wordRegex) && wordList.hasWord(word);
     }
 
+    private String firstName(String name) {
+        return name.substring(0, name.indexOf(" "));
+    }
+
     @Override
     public void onNewConversation(WireClient client) {
         Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
@@ -192,7 +195,7 @@ public class MessageHandler extends MessageHandlerBase {
                 Logger.info("onMemberJoin: bot: %s, user: %s/%s @%s", client.getId(), user.id, user.name, user.handle);
 
                 // say Hi to new participant
-                client.sendText("Hi there " + user.name);
+                client.sendText("Hi there " + firstName(user.name));
                 sendInstructions(client);
             }
         } catch (Exception e) {
