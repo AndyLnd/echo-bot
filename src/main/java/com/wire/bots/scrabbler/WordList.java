@@ -16,8 +16,8 @@ public class WordList {
   WordList() {
     try {
       URL u = this.getClass().getResource("sowpods.txt");
+      Logger.info(u.toURI().toString());
       Path p = Paths.get(u.toURI());
-      Logger.info(p.toString());
       List<String> lines = Files.readAllLines(p);
       wordList = new HashSet<String>(lines);
       Logger.info("wordlist loaded: " + wordList.size());
