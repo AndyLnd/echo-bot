@@ -143,8 +143,8 @@ public class MessageHandler extends MessageHandlerBase {
             Integer highScore = Collections.max(scores.values());
             for (User user : userList) {
                 Integer score = scores.get(user.id);
-                String text = user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score) +
-                        (score == highScore ? unicode(0x1F389) : "");
+                String text = user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score)
+                        + (score == highScore && highScore != 0 ? " " + unicode(0x1F389) : "");
                 sendText(client, text);
             }
         } catch (Exception e) {
@@ -153,7 +153,7 @@ public class MessageHandler extends MessageHandlerBase {
         }
     }
 
-    private String unicode(int code){
+    private String unicode(int code) {
         return new String(Character.toChars(code));
     }
 
