@@ -48,7 +48,7 @@ public class MessageHandler extends MessageHandlerBase {
     private Set<String> guessedWords = new HashSet<String>();
     private Timer timer = new Timer("GameTimer");
     private WordList wordList = new WordList();
-    private Set<Character> chars = new HashSet<Character>();
+    private Set<Character> letters = new HashSet<Character>();
     private String wordRegex;
     private int consonantCount = 6;
     private int vowelCount = 3;
@@ -103,17 +103,29 @@ public class MessageHandler extends MessageHandlerBase {
         isGameRunning = true;
         scores.clear();
         guessedWords.clear();
-        chars.clear();
-        while (chars.size() < consonantCount) {
-            chars.add(consonants.charAt(rand.nextInt(consonants.length())));
+        letters.clear();
+        while (letters.size() < consonantCount) {
+            letters.add(consonants.charAt(rand.nextInt(consonants.length())));
         }
-        while (chars.size() < consonantCount + vowelCount) {
-            chars.add(vowels.charAt(rand.nextInt(vowels.length())));
+        while (letters.size() < consonantCount + vowelCount) {
+            letters.add(vowels.charAt(rand.nextInt(vowels.length())));
         }
 
-        wordRegex = "(?i)^[" + String.valueOf(chars) + "]+$";
-        sendText(client, "Your letters:");
-        sendText(client, StringUtils.join(chars, " ").toUpperCase());
+        wordRegex = "(?i)^[" + String.valueOf(letters) + "]+$";
+        String letterString = StringUtils.join(letters, " ").toUpperCase();
+        sendText(client, "Your letters:\n" + letterString);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sendText(client, "20 seconds left!\n" + letterString);
+            }
+        }, TimeUnit.SECONDS.toMillis(10));
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                sendText(client, "10 seconds left!\n" + letterString);
+            }
+        }, TimeUnit.SECONDS.toMillis(20));
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -138,19 +150,19 @@ public class MessageHandler extends MessageHandlerBase {
 
     private void endGame(WireClient client) {
         isGameRunning = false;
-        sendText(client, "Time's up!");
-        sendText(client, "Here are the scores:");
+
         try {
             Collection<User> users = client.getUsers(new ArrayList<String>(scores.keySet()));
             List<User> userList = new ArrayList<User>(users);
             Collections.sort(userList, new Sorter());
             Integer highScore = Collections.max(scores.values());
+            String scoreList = "";
             for (User user : userList) {
                 Integer score = scores.get(user.id);
-                String text = user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score)
-                        + (score == highScore && highScore != 0 ? " " + unicode(0x1F389) : "");
-                sendText(client, text);
+                scoreList += user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score)
+                        + (score == highScore && highScore != 0 ? " " + unicode(0x1F389) : "") + "\n";
             }
+            sendText(client, "Time's up!\nHere are the scores:\n" + scoreList);
         } catch (Exception e) {
             e.printStackTrace();
             Logger.error(e.getMessage());
