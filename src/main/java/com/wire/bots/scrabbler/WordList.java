@@ -3,13 +3,8 @@ package com.wire.bots.scrabbler;
 import com.wire.bots.sdk.Logger;
 
 import java.io.BufferedReader;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
