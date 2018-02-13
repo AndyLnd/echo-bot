@@ -52,6 +52,9 @@ public class MessageHandler extends MessageHandlerBase {
     private String wordRegex;
     private int consonantCount = 6;
     private int vowelCount = 3;
+    private String consonants = "bcdfghjklmnpqrstvwxyz";
+    private String vowels = "aeiou";
+    private Random rand = new Random();
 
     /**
      * @param newBot Initialization object for new Bot instance
@@ -82,12 +85,12 @@ public class MessageHandler extends MessageHandlerBase {
     public void onText(WireClient client, TextMessage msg) {
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
-            if (this.isGameRunning) {
-                this.handleInput(msg);
+            if (isGameRunning) {
+                handleInput(msg);
             } else if (text.equals("lets play") || text.equals("start game")) {
-                this.startGame(client);
+                startGame(client);
             } else if (text.equals("help")) {
-                this.sendInstructions(client);
+                sendInstructions(client);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -95,23 +98,20 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void startGame(WireClient client) {
-        this.isGameRunning = true;
-        this.scores.clear();
-        this.guessedWords.clear();
-        this.chars.clear();
-        String consonants = "bcdfghjklmnpqrstvwxyz";
-        String vowels = "aeiou";
-        Random r = new Random();
-        while (this.chars.size() < this.consonantCount) {
-            this.chars.add(consonants.charAt(r.nextInt(consonants.length())));
+        isGameRunning = true;
+        scores.clear();
+        guessedWords.clear();
+        chars.clear();
+        while (chars.size() < consonantCount) {
+            chars.add(consonants.charAt(rand.nextInt(consonants.length())));
         }
-        while (this.chars.size() < this.consonantCount + this.vowelCount) {
-            this.chars.add(vowels.charAt(r.nextInt(vowels.length())));
+        while (chars.size() < consonantCount + vowelCount) {
+            chars.add(vowels.charAt(rand.nextInt(vowels.length())));
         }
 
-        this.wordRegex = "(?i)^[" + String.valueOf(this.chars) + "]+$";
-        this.sendText(client, "Your letters:");
-        this.sendText(client, StringUtils.join(this.chars, " ").toUpperCase());
+        wordRegex = "(?i)^[" + String.valueOf(chars) + "]+$";
+        sendText(client, "Your letters:");
+        sendText(client, StringUtils.join(chars, " ").toUpperCase());
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -123,26 +123,29 @@ public class MessageHandler extends MessageHandlerBase {
     private void handleInput(TextMessage msg) {
         String word = msg.getText().trim().toLowerCase();
         String user = msg.getUserId();
-        if (this.isValidWord(word)) {
-            Integer oldScore = this.scores.get(user);
-            if (oldScore == null) {
-                oldScore = 0;
-            }
-            this.scores.put(user, oldScore + 1);
-            this.guessedWords.add(word);
+        Integer oldScore = scores.getOrDefault(user, 0);
+        if (isValidWord(word)) {
+            scores.put(user, oldScore + word.length());
+            guessedWords.add(word);
+        } else {
+            scores.put(user, oldScore);
         }
     }
 
     private void endGame(WireClient client) {
-        this.isGameRunning = false;
-        this.sendText(client, "Time's up!");
-        this.sendText(client, "Here are the scores:");
+        isGameRunning = false;
+        sendText(client, "Time's up!");
+        sendText(client, "Here are the scores:");
         try {
             Collection<User> users = client.getUsers(new ArrayList<String>(scores.keySet()));
             List<User> userList = new ArrayList<User>(users);
             Collections.sort(userList, new Sorter());
+            Integer highScore = Collections.max(scores.values());
             for (User user : userList) {
-                this.sendText(client, user.name + ": " + this.scores.get(user.id));
+                Integer score = scores.get(user.id);
+                String text = user.name + ": " + (score == 0 ? "💩" : score) +
+                        (score == highScore ? Character.toString((char)0x1F389) : "");
+                sendText(client, text);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,14 +154,14 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private boolean isValidWord(String word) {
-        return !this.guessedWords.contains(word) && word.matches(this.wordRegex) && this.wordList.hasWord(word);
+        return !guessedWords.contains(word) && word.matches(wordRegex) && wordList.hasWord(word);
     }
 
     @Override
     public void onNewConversation(WireClient client) {
         Logger.info("onNewConversation: bot: %s, conv: %s", client.getId(), client.getConversationId());
-        this.sendText(client, "Hi!");
-        this.sendInstructions(client);
+        sendText(client, "Hi!");
+        sendInstructions(client);
     }
 
     @Override
@@ -170,7 +173,7 @@ public class MessageHandler extends MessageHandlerBase {
 
                 // say Hi to new participant
                 client.sendText("Hi there " + user.name);
-                this.sendInstructions(client);
+                sendInstructions(client);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -179,7 +182,7 @@ public class MessageHandler extends MessageHandlerBase {
     }
 
     private void sendInstructions(WireClient client) {
-        this.sendText(client,
+        sendText(client,
                 "I am the scrabble bot.\nIf you want to play, just say \"Let's play!\".\nI will give you 9 letters and you give me as many words as you can build from them in 30 seconds.");
     }
 
@@ -204,7 +207,7 @@ public class MessageHandler extends MessageHandlerBase {
 
     public class Sorter implements Comparator<User> {
         public int compare(User user1, User user2) {
-            return scores.get(user1.id) - scores.get(user2.id);
+            return scores.get(user2.id) - scores.get(user1.id);
         }
     }
 }
