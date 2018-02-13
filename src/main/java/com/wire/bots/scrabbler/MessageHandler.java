@@ -143,14 +143,18 @@ public class MessageHandler extends MessageHandlerBase {
             Integer highScore = Collections.max(scores.values());
             for (User user : userList) {
                 Integer score = scores.get(user.id);
-                String text = user.name + ": " + (score == 0 ? "💩" : score) +
-                        (score == highScore ? Character.toString((char)0x1F389) : "");
+                String text = user.name + ": " + (score == 0 ? unicode(0x1F4A9) : score) +
+                        (score == highScore ? unicode(0x1F389) : "");
                 sendText(client, text);
             }
         } catch (Exception e) {
             e.printStackTrace();
             Logger.error(e.getMessage());
         }
+    }
+
+    private String unicode(int code){
+        return new String(Character.toChars(code));
     }
 
     private boolean isValidWord(String word) {
