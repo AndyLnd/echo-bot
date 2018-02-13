@@ -15,7 +15,7 @@ public class WordList {
 
   WordList() {
     try {
-      URL u = getClass().getResource("/sowpods.txt");
+      URL u = getClass().getResource("sowpods.txt");
       Path p = Paths.get(u.toURI());
       List<String> lines = Files.readAllLines(p);
       wordList = new HashSet<String>(lines);
