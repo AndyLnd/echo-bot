@@ -12,7 +12,8 @@ public class WordList {
 
   WordList() {
     try {
-      File file = new File(getClass().getResource("sowpods.txt").getFile());
+      ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+      File file = new File(classloader.getResource("/sowpods.txt").getFile());
       Logger.info(file.toPath().toString());
       List<String> lines = Files.readAllLines(file.toPath());
       wordList = new HashSet<String>(lines);
