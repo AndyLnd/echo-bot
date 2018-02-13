@@ -86,7 +86,9 @@ public class MessageHandler extends MessageHandlerBase {
         try {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
             if (isGameRunning) {
-                handleInput(msg);
+                if (handleInput(msg)) {
+                    client.sendReaction(msg.getMessageId(), unicode(0x2764));
+                }
             } else if (text.equals("lets play") || text.equals("start game")) {
                 startGame(client);
             } else if (text.equals("help")) {
@@ -120,15 +122,17 @@ public class MessageHandler extends MessageHandlerBase {
         }, TimeUnit.SECONDS.toMillis(30));
     }
 
-    private void handleInput(TextMessage msg) {
+    private boolean handleInput(TextMessage msg) {
         String word = msg.getText().trim().toLowerCase();
         String user = msg.getUserId();
         Integer oldScore = scores.getOrDefault(user, 0);
         if (isValidWord(word)) {
             scores.put(user, oldScore + word.length());
             guessedWords.add(word);
+            return true;
         } else {
             scores.put(user, oldScore);
+            return false;
         }
     }
 
