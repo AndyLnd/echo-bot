@@ -114,10 +114,13 @@ public class Game {
           Integer score = scores.get(user.id);
           boolean isPoop = score == 0;
           boolean isTop = score == highScore && !isPoop;
-          boolean isCheater = blameCheater && isTop;
+          if (blameCheater && isTop) {
+            Cheaters.add(user.id);
+          }
+          boolean isCheater = Cheaters.isCheater(user.id);
           String name = StringUtil.firstName(user.name);
           name = isCheater ? StringUtil.shmify(name) : name;
-          String addedEmoji = isTop ? isCheater ? robot + poop : party : "";
+          String addedEmoji = isCheater ? robot + poop : isTop ? party : "";
           scoreList += name + ": " + (isPoop ? poop : score) + addedEmoji + "\n";
         }
         sendText("Time's up!\nHere are the scores:\n" + scoreList);
