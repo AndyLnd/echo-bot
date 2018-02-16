@@ -7,3 +7,4 @@ keystore.jks
 conf/keystore.jks.base64
 data/
 .idea/
+.DS_Store
