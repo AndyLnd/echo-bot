@@ -9,4 +9,8 @@ public class StringUtil {
   static public String firstName(String name) {
     return name.substring(0, name.indexOf(" "));
   }
+
+  static public String shmify(String string) {
+    return string.toLowerCase().replaceFirst("[bcdfghjklmnpqrstvwxz]*", "Shm");
+  }
 }

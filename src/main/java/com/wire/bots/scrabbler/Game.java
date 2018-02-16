@@ -31,6 +31,10 @@ public class Game {
   private WireClient client;
   private Timer timer;
   private Runnable closeGame;
+  private boolean blameCheater = false;
+  private String poop = StringUtil.unicode(0x1F4A9);
+  private String party = StringUtil.unicode(0x1F389);
+  private String robot = StringUtil.unicode(0x1F916);
 
   Game(WireClient client, Runnable closeGame) {
     this.client = client;
@@ -82,6 +86,10 @@ public class Game {
     }
   }
 
+  public void blameCheater() {
+    blameCheater = true;
+  }
+
   private void sendText(String text) {
     try {
       client.sendText(text);
@@ -100,8 +108,13 @@ public class Game {
       String scoreList = "";
       for (User user : userList) {
         Integer score = scores.get(user.id);
-        scoreList += StringUtil.firstName(user.name) + ": " + (score == 0 ? StringUtil.unicode(0x1F4A9) : score)
-            + (score == highScore && highScore != 0 ? " " + StringUtil.unicode(0x1F389) : "") + "\n";
+        boolean isPoop = score == 0;
+        boolean isTop = score == highScore && !isPoop;
+        boolean isCheater = blameCheater && isTop;
+        String name = StringUtil.firstName(user.name);
+        name = isCheater ? StringUtil.shmify(name) : name;
+        String addedEmoji = isTop ? isCheater ? robot + poop : party : "";
+        scoreList += name + ": " + (isPoop ? poop : score) + addedEmoji + "\n";
       }
       sendText("Time's up!\nHere are the scores:\n" + scoreList);
     } catch (Exception e) {
@@ -117,7 +130,6 @@ public class Game {
       return scores.get(user2.id) - scores.get(user1.id);
     }
   }
-
 
   private boolean isValidWord(String word) {
     return !guessedWords.contains(word) && word.matches(wordRegex) && WordList.hasWord(word);

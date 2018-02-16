@@ -54,13 +54,19 @@ public class MessageHandler extends MessageHandlerBase {
             String text = msg.getText().toLowerCase().replaceAll("[^ a-z]", "");
             String convId = client.getConversationId();
             if (games.containsKey(convId)) {
-                games.get(convId).handleInput(msg);
+                if (msg.getText().equals("CHEATER!")) {
+                    games.get(convId).blameCheater();
+                } else {
+                    games.get(convId).handleInput(msg);
+                }
             } else if (text.equals("lets play") || text.equals("start game")) {
-                Game newGame = new Game(client, new Runnable(){
+                Game newGame = new Game(client, new Runnable() {
                     private String id = convId;
+
                     @Override
                     public void run() {
-                        games.remove(id);;
+                        games.remove(id);
+                        Logger.info("Game %s ended.", id);
                     }
                 });
                 games.put(convId, newGame);
