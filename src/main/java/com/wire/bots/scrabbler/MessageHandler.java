@@ -60,14 +60,9 @@ public class MessageHandler extends MessageHandlerBase {
                     games.get(convId).handleInput(msg);
                 }
             } else if (text.equals("lets play") || text.equals("start game")) {
-                Game newGame = new Game(client, new Runnable() {
-                    private String id = convId;
-
-                    @Override
-                    public void run() {
-                        games.remove(id);
-                        Logger.info("Game %s ended.", id);
-                    }
+                Game newGame = new Game(client, () -> {
+                    games.remove(convId);
+                    Logger.info("Game %s ended.", convId);
                 });
                 games.put(convId, newGame);
             } else if (text.equals("help")) {
@@ -75,6 +70,7 @@ public class MessageHandler extends MessageHandlerBase {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            Logger.error(e.getMessage());
         }
     }
 

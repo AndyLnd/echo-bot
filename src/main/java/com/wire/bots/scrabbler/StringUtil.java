@@ -7,7 +7,11 @@ public class StringUtil {
   }
 
   static public String firstName(String name) {
-    return name.substring(0, name.indexOf(" "));
+    int spaceIndex = name.indexOf(" ");
+    if (spaceIndex < 0) {
+      return name;
+    }
+    return name.substring(0, spaceIndex);
   }
 
   static public String shmify(String string) {
